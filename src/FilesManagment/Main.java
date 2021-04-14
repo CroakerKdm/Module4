@@ -1,66 +1,64 @@
 package FilesManagment;
 
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.Month;
 import java.time.temporal.ChronoUnit;
-import java.util.stream.Stream;
 
 /**
  * @author Croaker
  * @version 1.0.0
- * @project Module 4
+ * @project Module4
  * @class Main
- * @since 11.04.2021 - 13.38
+ * @since 11.04.2021 - 15.49
  **/
 
 public class Main {
     public static void main(String[] args) throws IOException {
+        LocalDate[] dates = new LocalDate[]{
+                LocalDate.of(2020, Month.JANUARY, 1),
+                LocalDate.of(2020, Month.FEBRUARY, 1),
+                LocalDate.of(2020, Month.MARCH, 1),
+                LocalDate.of(2019, Month.NOVEMBER, 1),
+                LocalDate.of(2019, Month.DECEMBER, 1),
+        };
+
         LocalDateTime start = LocalDateTime.now();
-        String logs1 = new String(Files.readAllBytes(Paths.get("logs.txt")));
-        int errorCounter = 0;
-
-        int indexOfFirst2020 = logs1.indexOf("2020-"); //logs might contain more then one line, incoming string is split in two separate for 2019 and 2020
-        String logs2020 = logs1.substring(indexOfFirst2020); //this two substring are split by year, which is present at the start of every log,
-        String logs2019 = logs1.substring(0, indexOfFirst2020); //rather then by lines
-
-        String[] logsSplit2019 = logs2019.split("\n2019-"); //dates might be found inside the logs, this way,
-        String[] logsSplit2020 = logs2020.split("\n2020-"); //only the dates at the start of the sentences are calculated
-
-        Object[] logs = Stream.of(logsSplit2019, logsSplit2020).flatMap(Stream::of).toArray();
-
-        for (Object log : logs) {
-            if (log.toString().contains("ERROR")) {
-                errorCounter++;
-            }
+        for (int i = 0; i < 5; i++) {
+            LogManager.logsByDateToFile("logs.txt", dates[i]);
         }
         LocalDateTime finish = LocalDateTime.now();
 
-        System.out.println("Total number of logs = " + logs.length);
-        System.out.println("Total number of errors = " + errorCounter);
-        System.out.println("Time first method = " + (int) ChronoUnit.MILLIS.between(start, finish));
+        System.out.println("Time to process 5 month in consistent way = " + ChronoUnit.MILLIS.between(start, finish) + "\n");
 
-        start = LocalDateTime.now();
-        System.out.println("\nTotal number of errors = " + Files.readAllLines(Paths.get("logs.txt"))
-                .stream().filter(line -> line.contains("ERROR")).count());
-        finish = LocalDateTime.now();
-        System.out.println("Time second method = " + (int) ChronoUnit.MILLIS.between(start, finish));
+        for (int i = 0; i < 5; i++) {
+            new MyThread(dates[i], "logs.txt").start();
+        }
     }
 }
 
 /*
-    Total number of logs = 2494727
-    Total number of errors = 361
-    Time first method = 4310
+        Error logs are made by month instead of days, because there only few month with actual errors
 
-    Total number of errors = 361
-    Time second method = 1882
+        Time to process 5 month in consistent way = 6345
+
+        Thread-2 has been started at 2021-04-14T21:16:20.395476
+        Thread-3 has been started at 2021-04-14T21:16:20.396476400
+        Thread-1 has been started at 2021-04-14T21:16:20.395476
+        Thread-0 has been started at 2021-04-14T21:16:20.395476
+        Thread-4 has been started at 2021-04-14T21:16:20.396476400
+        Thread-2 has been finished at 2021-04-14T21:16:22.196884900
+        Thread-2 DURATION is  1801
+        Thread-3 has been finished at 2021-04-14T21:16:22.206881400
+        Thread-3 DURATION is  1810
+        Thread-1 has been finished at 2021-04-14T21:16:22.270860500
+        Thread-1 DURATION is  1875
+        Thread-4 has been finished at 2021-04-14T21:16:22.345837500
+        Thread-4 DURATION is  1949
+        Thread-0 has been finished at 2021-04-14T21:16:22.376827900
+        Thread-0 DURATION is  1981
+
+        Longest thread took 3 times less time, than processing files in a consistent way
 */
 
-/*
-number of logs:
-2845598 split by \n
-2504926 split by 2019- or 2020-
-2494727 split by \n2019- or \n2020-
-*/
